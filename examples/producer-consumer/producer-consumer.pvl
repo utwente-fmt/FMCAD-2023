@@ -1,0 +1,1176 @@
+// ============================== //
+// === VERIFIES IN 39 SECONDS === //
+// ==== INVARIANT LENGTH: 72 ==== //
+// ============================== //
+
+
+class MyFifoChannel {
+    Main m;
+    
+    int[] buffer;
+    int r_pos;
+    int w_pos;
+    int n;
+    
+    // SPECIFICATIONS ONLY //
+    seq<int> written_items;
+    seq<int> read_items;
+    // =================== //
+    
+    context Perm(m_param.BUFFERSIZE, 1\2);
+    ensures Perm(buffer, read)
+            ** \array(buffer, m_param.BUFFERSIZE)
+            ** Perm(buffer[*], write);
+    ensures Perm(r_pos, write)
+            ** r_pos == 0;
+    ensures Perm(w_pos, write)
+            ** w_pos == 0;
+    ensures Perm(n, write)
+            ** n == 0;
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(written_items, write)
+            ** written_items == [t: int];
+    ensures Perm(read_items, write)
+            ** read_items == [t: int];
+    MyFifoChannel(Main m_param) {
+        m = m_param;
+        buffer = new int[m_param.BUFFERSIZE];
+        r_pos = 0;
+        w_pos = 0;
+        n = 0;
+        written_items = seq<int> {};
+        read_items = seq<int> {};
+    }
+    
+    context Perm(m, read)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.fifo == this
+            ** Perm(written_items, 1\2)
+            ** Perm(m.prod.pc, 1\2)
+            ** Perm(m.prod.sent, 1\2)
+            ** m.process_state[0] == -1;
+    requires m.prod.pc == 2
+            ** m.reachable_states_prod_2();
+    requires (elem \memberof m.prod.sent);
+    ensures m.prod.pc == 0
+            ** m.reachable_states_prod_0();
+    ensures written_items == \old(written_items ++ elem);
+    void fifo_write(int elem) {
+    
+        boolean initial_traverse = true;
+
+        loop_invariant true
+            ** Perm(m, read)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.fifo == this
+            ** Perm(written_items, 1\2)
+            ** written_items == \old(written_items)
+            ** m.process_state[0] == -1
+            ** Perm(m.prod.pc, 1\2)
+            ** Perm(m.prod.sent, 1\2)
+            ** (initial_traverse ==> (m.prod.pc == 2 ** m.reachable_states_prod_2()))
+            ** (!initial_traverse ==> (m.prod.pc == 3 ** m.reachable_states_prod_3()))
+            ** (elem \memberof m.prod.sent);
+        while (n == m.BUFFERSIZE) {
+            initial_traverse = false;
+            
+            // wait(read_event)
+            m.process_state = m.process_state[0 -> 0];
+
+            m.prod.pc = 3;
+            
+            loop_invariant true
+                ** Perm(m, read)
+                ** m != null
+                ** held(m)
+                ** m.global_invariant()
+                ** m.fifo == this
+                ** Perm(written_items, 1\2)
+                ** written_items == \old(written_items)
+                ** Perm(m.prod.pc, 1\2)
+                ** Perm(m.prod.sent, 1\2)
+                ** m.prod.pc == 3
+                ** m.reachable_states_prod_3()
+                ** (elem \memberof m.prod.sent);
+            while (m.process_state[0] != -1 || m.event_state[0] != -2) {
+                unlock m;
+                lock m;
+            }
+            // ----------------
+        }
+        
+        m.prod.pc = 4;
+        
+        buffer[w_pos] = elem;
+        // w_pos = (w_pos + 1) % m.BUFFERSIZE;
+        w_pos = (w_pos + 1 < m.BUFFERSIZE) ? w_pos + 1 : 0;
+        n = n + 1;
+        written_items = written_items ++ elem;
+        // notify(write_event)
+        m.event_state = m.event_state[1 -> -1];
+        // -------------------
+        
+        m.prod.pc = 0;
+    }
+    
+    context Perm(m, read)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.fifo == this
+            ** Perm(read_items, 1\2)
+            ** Perm(m.cons.pc, 1\2)
+            ** m.process_state[1] == -1;
+    requires m.cons.pc == 0
+            ** m.reachable_states_cons_0();
+    ensures m.cons.pc == 3
+            ** m.reachable_states_cons_3();
+    ensures |read_items| == \old(|read_items|) + 1;
+    ensures \result == written_items[\old(|read_items|)];
+    ensures read_items == \old(read_items ++ \result);
+    int fifo_read() {
+        int tmp;
+        
+        boolean initial_traverse = true;
+        
+        loop_invariant true
+            ** Perm(m, read)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.fifo == this
+            ** Perm(read_items, 1\2)
+            ** read_items == \old(read_items)
+            ** m.process_state[1] == -1
+            ** Perm(m.cons.pc, 1\2)
+            ** (initial_traverse ==> (m.cons.pc == 0 ** m.reachable_states_cons_0()))
+            ** (!initial_traverse ==> (m.cons.pc == 1 ** m.reachable_states_cons_1()));
+        while (n == 0) {
+            initial_traverse = false;
+            
+            // wait(write_event)
+            m.process_state = m.process_state[1 -> 1];
+            
+            m.cons.pc = 1;
+            
+            loop_invariant true
+                ** Perm(m, read)
+                ** m != null
+                ** held(m)
+                ** m.global_invariant()
+                ** m.fifo == this
+                ** Perm(read_items, 1\2)
+                ** read_items == \old(read_items)
+                ** Perm(m.cons.pc, 1\2)
+                ** m.cons.pc == 1
+                ** m.reachable_states_cons_1();
+            while (m.process_state[1] != -1 || m.event_state[1] != -2) {
+                unlock m;
+                lock m;
+            }
+            // -----------------
+        }
+        
+        m.cons.pc = 2;
+        
+        tmp = buffer[r_pos];
+        // r_pos = (r_pos + 1) % m.BUFFERSIZE;
+        r_pos = (r_pos + 1 < m.BUFFERSIZE) ? r_pos + 1 : 0;
+        n = n - 1;
+        read_items = read_items ++ tmp;
+        
+        // notify(read_event)
+        m.event_state = m.event_state[0 -> -1];
+        // ------------------
+        
+        m.cons.pc = 3;
+        return tmp;
+    }
+}
+
+class Consumer {
+    Main m;
+    int pc;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    Consumer(Main m_param) {
+        m = m_param;
+        pc = 0;
+    }
+    
+    context Perm(m, 1\2)
+            ** m != null
+            ** Perm(m.cons, read)
+            ** m.cons == this
+            ** Perm(m.fifo, read)
+            ** Perm(m.fifo.read_items, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 0;
+    void run() {
+        lock m;
+        int c = 0;
+        pc = 0;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.cons == this
+            ** Perm(m.fifo.read_items, 1\2)
+            ** m.process_state[1] == -1
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_cons_0();
+        while (true) {
+            c = m.fifo.fifo_read();
+            
+            assert (c \memberof m.prod.sent);
+            
+            consume(c);
+        }
+        
+        unlock m;
+    }
+    
+    // Could a method be called from outside the module?
+    context Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.cons == this
+            ** Perm(m.fifo.read_items, 1\2)
+            ** Perm(pc, 1\2);
+    requires pc == 3
+            ** m.reachable_states_cons_3();
+    ensures pc == 0
+            ** m.reachable_states_cons_0();
+    void consume(int c_param) {
+        int wait_time = 200;
+        
+        // wait(wait_time)
+        m.process_state = m.process_state[1 -> 3];
+        m.event_state = m.event_state[3 -> wait_time];
+        pc = 4;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.cons == this
+            ** Perm(m.fifo.read_items, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 4
+            ** m.reachable_states_cons_4();
+        while (m.process_state[1] != -1 || m.event_state[3] != -2) {
+            unlock m;
+            lock m;
+        }
+        // ---------------
+        
+        pc = 0;
+    }
+}
+
+class Producer {
+    Main m;
+    int pc;
+    
+    // SPECIFICATIONS ONLY //
+    seq<int> sent;
+    // =================== //
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(sent, write)
+            ** sent == [t: int];
+    Producer(Main m_param) {
+        m = m_param;
+        pc = 0;
+        sent = seq<int> {};
+    }
+    
+    context Perm(m, 1\2)
+            ** m != null
+            ** Perm(m.prod, read)
+            ** m.prod == this
+            ** Perm(m.fifo, read)
+            ** Perm(m.fifo.written_items, 1\2)
+            ** Perm(sent, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 0;
+    void run() {
+        lock m;
+        int c = 0;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.prod == this
+            ** Perm(m.fifo.written_items, 1\2)
+            ** Perm(sent, 1\2)
+            ** m.process_state[0] == -1
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_prod_0();
+        while (true) {
+            c = produce(c);
+            
+            sent = sent ++ c;
+            
+            m.fifo.fifo_write(c);
+        }
+        
+        unlock m;
+    }
+    
+    context Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.prod == this
+            ** Perm(m.fifo.written_items, 1\2)
+            ** Perm(pc, 1\2);
+    requires pc == 0
+            ** m.reachable_states_prod_0();
+    ensures pc == 2
+            ** m.reachable_states_prod_2();
+    int produce(int c_param) {
+        int wait_time = 100;
+        
+        // wait(wait_time)
+        m.process_state = m.process_state[0 -> 2];
+        m.event_state = m.event_state[2 -> wait_time];
+        pc = 1;
+
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.prod == this
+            ** Perm(m.fifo.written_items, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 1
+            ** m.reachable_states_prod_1();
+        while (m.process_state[0] != -1 || m.event_state[2] != -2) {
+            unlock m;
+            lock m;
+        }
+        // ---------------
+        pc = 2;
+        
+        c_param = (c_param + 1) % 8;
+        return c_param;
+    }
+}
+
+class Main {
+    // Scheduling state
+    seq<int> process_state;
+    seq<int> event_state;
+    
+    // Object instances
+    MyFifoChannel fifo;
+    Producer prod;
+    Consumer cons;
+    
+    // Parameters
+    int BUFFERSIZE;
+    
+    inline resource scheduler_permission_invariant() = true
+  
+        ** Perm(process_state, write) ** |process_state| == 2
+        ** Perm(event_state, write) ** |event_state| == 4
+        
+        ** (\forall int i = 0 .. |process_state|;    {: process_state[i] :} == -1
+                                                  || (   0 <= process_state[i]
+                                                      && process_state[i] < |event_state|));
+                                                      
+    inline resource parameter_permission_invariant() = true
+        ** Perm(BUFFERSIZE, read)
+        ** BUFFERSIZE > 0;
+        
+    inline resource global_permission_invariant() = true
+        ** scheduler_permission_invariant()
+        
+        // PARAMETERS
+        ** parameter_permission_invariant()
+        
+        // FIFO
+        ** Perm(fifo, read)
+        ** fifo != null
+        ** Perm(fifo.m, read)
+        ** fifo.m == this
+        ** Perm(fifo.buffer, read)
+        ** \array(fifo.buffer, BUFFERSIZE)
+        ** Perm(fifo.buffer[*], write)
+        ** Perm(fifo.r_pos, write)
+        ** 0 <= fifo.r_pos
+        ** fifo.r_pos < BUFFERSIZE
+        ** Perm(fifo.w_pos, write)
+        ** 0 <= fifo.w_pos
+        ** fifo.w_pos < BUFFERSIZE
+        ** Perm(fifo.n, write)
+        ** 0 <= fifo.n
+        ** fifo.n <= BUFFERSIZE
+        ** Perm(fifo.written_items, 1\2)
+        ** Perm(fifo.read_items, 1\2)
+        
+        // PROD
+        ** Perm(prod, read)
+        ** prod != null
+        ** Perm(prod.pc, 1\2)
+        ** Perm(prod.sent, 1\2)
+        
+        // CONS
+        ** Perm(cons, read)
+        ** cons != null
+        ** Perm(cons.pc, 1\2)
+        
+        // USER-DEFINED INVARIANTS
+        
+        // Length of the buffer
+        ** (fifo.r_pos < fifo.w_pos ==> fifo.n == fifo.w_pos - fifo.r_pos)
+        ** (fifo.r_pos > fifo.w_pos ==> fifo.n == BUFFERSIZE - fifo.r_pos + fifo.w_pos)
+        ** (fifo.r_pos == fifo.w_pos ==> (fifo.n == 0 || fifo.n == BUFFERSIZE))
+            
+        ** |fifo.written_items| == |fifo.read_items| + fifo.n
+        
+        // FIFO buffer contains only written and unread elements
+        ** (fifo.r_pos < fifo.w_pos
+            ==> (\forall int i = fifo.r_pos .. fifo.w_pos;
+                         {: fifo.buffer[i] :} == fifo.written_items[|fifo.read_items| + i - fifo.r_pos]))
+        ** ((fifo.r_pos > fifo.w_pos || fifo.n == BUFFERSIZE)
+            ==> (\forall int i = fifo.r_pos .. BUFFERSIZE;
+                         {: fifo.buffer[i] :} == fifo.written_items[|fifo.read_items| + i - fifo.r_pos]))
+        ** ((fifo.r_pos > fifo.w_pos || fifo.n == BUFFERSIZE)
+            ==> (\forall int i = 0 .. fifo.w_pos;
+                         {: fifo.buffer[i] :} == fifo.written_items[|fifo.read_items| + BUFFERSIZE - fifo.r_pos + i]))
+                   
+        // What has been written to the FIFO queue is a subset of what has been sent by the producer
+        ** (\forall int i = 0 .. |fifo.written_items|; ({: fifo.written_items[i] :} \memberof prod.sent))
+        ;
+        
+    inline resource reachable_states_prod_0() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 0)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 0 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 0 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 0 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -1 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 0 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 0 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -1 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 0 && cons.pc == 4)
+            );
+
+    inline resource reachable_states_prod_1() = true
+        ** (   (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 0)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            );
+
+    inline resource reachable_states_prod_2() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 2 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 2 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 2 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 2 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 2 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 2 && cons.pc == 4)
+            );
+
+    inline resource reachable_states_prod_3() = true
+        ** (   (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            );
+
+    inline resource reachable_states_prod_4() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 4 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 4 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 4 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 4 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 4 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 4 && cons.pc == 4)
+            );
+
+    inline resource reachable_states_cons_0() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 0)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 0)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 0)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 0)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 0)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 0)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 0)
+            );
+
+    inline resource reachable_states_cons_1() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 1)
+            );
+
+    inline resource reachable_states_cons_2() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 2)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 2)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 2)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 2)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 2)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 2)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 2)
+            );
+
+    inline resource reachable_states_cons_3() = true
+        ** (   (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 3)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 3)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 3)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 3)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 3)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 3)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 3)
+            );
+
+    inline resource reachable_states_cons_4() = true
+        ** (   (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 0 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            );
+
+    inline resource reachable_abstract_states_invariant() = true
+        ** (   (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 0)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 0 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 0 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 0)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 100
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 100
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == -3
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -3 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -2
+                && prod.pc == 3 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == 1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 1)
+            || (   process_state[0] == 2 && process_state[1] == -1
+                && event_state[0] == -3 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == -2
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 0 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 3 && cons.pc == 4)
+            || (   process_state[0] == -1 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -1 && event_state[1] == -1 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            || (   process_state[0] == 2 && process_state[1] == 3
+                && event_state[0] == -2 && event_state[1] == -2 && event_state[2] == 100 && event_state[3] == 200
+                && prod.pc == 1 && cons.pc == 4)
+            );
+        
+    inline resource global_invariant() = global_permission_invariant();
+        
+    resource lock_invariant() = global_invariant() ** reachable_abstract_states_invariant();
+    
+    ensures Perm(prod, read)
+            ** prod != null
+            ** Perm(prod.m, 1\2)
+            ** prod.m == this
+            ** Perm(fifo, read)
+            ** Perm(fifo.written_items, 1\2)
+            ** Perm(prod.sent, 1\2)
+            ** Perm(prod.pc, 1\2)
+            ** prod.pc == 0;
+    ensures Perm(cons, read)
+            ** cons != null
+            ** Perm(cons.m, 1\2)
+            ** cons.m == this
+            ** Perm(fifo, read)
+            ** Perm(fifo.read_items, 1\2)
+            ** Perm(cons.pc, 1\2)
+            ** cons.pc == 0;
+    ensures idle(prod);
+    ensures idle(cons);
+    requires 0 < b_size;
+    Main(int b_size) {
+    
+        // Processes (2):
+        //       0 - prod
+        //       1 - cons
+        //
+        // Events (4):
+        //       0 - fifo.read
+        //       1 - fifo.write
+        //       2 - prod.wait
+        //       3 - cons.wait
+         
+        // Initialize scheduling variables
+        process_state = [-1, -1];
+        event_state   = [-3, -3, -3, -3];
+        
+        // Initialize parameters
+        BUFFERSIZE = b_size;
+        
+        // Initialize object instances
+        fifo = new MyFifoChannel(this);
+        prod = new Producer(this);
+        cons = new Consumer(this);
+    }
+    
+    context Perm(prod, read)
+            ** prod != null
+            ** Perm(prod.m, 1\2)
+            ** prod.m == this
+            ** Perm(fifo, read)
+            ** Perm(fifo.written_items, 1\2)
+            ** Perm(prod.sent, 1\2)
+            ** Perm(prod.pc, 1\2)
+            ** prod.pc == 0;
+    context Perm(cons, read)
+            ** cons != null
+            ** Perm(cons.m, 1\2)
+            ** cons.m == this
+            ** Perm(fifo, read)
+            ** Perm(fifo.read_items, 1\2)
+            ** Perm(cons.pc, 1\2)
+            ** cons.pc == 0;
+    context idle(prod);
+    context idle(cons);
+    void main() {
+        lock this;
+        fork prod;
+        fork cons;
+        unlock this;
+        
+        // Scheduler
+        loop_invariant true;
+        while (true) {
+            lock this;
+                
+            // Wake up processes waiting 0 time without delta delay
+            immediate_wakeup();
+            
+            // Also reset any events that triggered
+            reset_events_no_delta();
+
+            // If still no processes are ready, advance delay or perform a delta cycle
+            if (process_state[0] != -1 && process_state[1] != -1) {
+                
+                // Find the minimum delay until the next interesting point
+                int min_advance = find_minimum_advance(event_state);
+                if (min_advance == -1) {
+                    min_advance = 0;
+                }
+                
+                // Advance delay to the next interesting point
+                event_state = [event_state[0] < -1 ? -3 : event_state[0] - min_advance,
+                               event_state[1] < -1 ? -3 : event_state[1] - min_advance,
+                               event_state[2] < -1 ? -3 : event_state[2] - min_advance,
+                               event_state[3] < -1 ? -3 : event_state[3] - min_advance];
+                
+                // Wake up processes if necessary
+                wakeup_after_wait();
+                
+                // Also reset any events that triggered
+                reset_all_events();
+            }
+            
+            unlock this;
+        }
+        
+        join prod;
+        join cons;
+    }
+    
+    // =====================================================================
+    // ==================== Scheduling Helper Functions ====================
+    // =====================================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures event_state == \old(event_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (   \old(process_state[0]) >= 0
+                     && \old(event_state[\old(process_state[0])]) == 0)
+                ==> (process_state[0] == -1))
+            && (    (   \old(process_state[1]) >= 0
+                     && \old(event_state[\old(process_state[1])]) == 0)
+                ==> (process_state[1] == -1));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (!(   \old(process_state[0]) >= 0
+                       && \old(event_state[\old(process_state[0])]) == 0))
+                ==> (process_state[0] == \old(process_state[0])))
+            && (    (!(   \old(process_state[1]) >= 0
+                       && \old(event_state[\old(process_state[1])]) == 0))
+                ==> (process_state[1] == \old(process_state[1])));
+    void immediate_wakeup();
+    // ===============================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures process_state == \old(process_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (\old(event_state[0]) == 0)
+                ==> (event_state[0] == -2))
+            && (    (\old(event_state[1]) == 0)
+                ==> (event_state[1] == -2))
+            && (    (\old(event_state[2]) == 0)
+                ==> (event_state[2] == -2))
+            && (    (\old(event_state[3]) == 0)
+                ==> (event_state[3] == -2));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (\old(event_state[0]) != 0)
+                ==> (event_state[0] == \old(event_state[0])))
+            && (    (\old(event_state[1]) != 0)
+                ==> (event_state[1] == \old(event_state[1])))
+            && (    (\old(event_state[2]) != 0)
+                ==> (event_state[2] == \old(event_state[2])))
+            && (    (\old(event_state[3]) != 0)
+                ==> (event_state[3] == \old(event_state[3])));
+    void reset_events_no_delta();
+    // ===============================================================
+    
+    // Requirements to check for this method to work
+    requires |vals| == 4;
+    // The result is a lower bound of all timeouts
+    ensures    (vals[0] < -1 || \result <= vals[0])
+            && (vals[1] < -1 || \result <= vals[1])
+            && (vals[2] < -1 || \result <= vals[2])
+            && (vals[3] < -1 || \result <= vals[3]);
+    // If no timeout exists, then the result is 0; otherwise, it is the minimum of all existing timeouts
+    ensures    (    (   vals[0] < -1
+                     && vals[1] < -1
+                     && vals[2] < -1
+                     && vals[3] < -1)
+                ==> \result == 0)
+            && (    (   vals[0] >= -1
+                     || vals[1] >= -1
+                     || vals[2] >= -1
+                     || vals[3] >= -1)
+                ==> (   (vals[0] >= -1 && \result == vals[0])
+                     || (vals[1] >= -1 && \result == vals[1])
+                     || (vals[2] >= -1 && \result == vals[2])
+                     || (vals[3] >= -1 && \result == vals[3])));
+    pure int find_minimum_advance(seq<int> vals);
+    // ===============================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures event_state == \old(event_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (\old(process_state[0]) >= 0
+                     && (   \old(event_state[\old(process_state[0])]) == 0
+                         || \old(event_state[\old(process_state[0])]) == -1))
+                ==> (process_state[0] == -1))
+            && (    (\old(process_state[1]) >= 0
+                     && (   \old(event_state[\old(process_state[1])]) == 0
+                         || \old(event_state[\old(process_state[1])]) == -1))
+                ==> (process_state[1] == -1));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (!(   \old(process_state[0]) >= 0
+                       && (   \old(event_state[\old(process_state[0])]) == 0
+                           || \old(event_state[\old(process_state[0])]) == -1)))
+                ==> (process_state[0] == \old(process_state[0])))
+            && (    (!(   \old(process_state[1]) >= 0
+                       && (   \old(event_state[\old(process_state[1])]) == 0
+                           || \old(event_state[\old(process_state[1])]) == -1)))
+                ==> (process_state[1] == \old(process_state[1])));
+    void wakeup_after_wait();
+    // ===============================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures process_state == \old(process_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (   \old(event_state[0]) == 0
+                     || \old(event_state[0]) == -1)
+                ==> (event_state[0] == -2))
+            && (    (   \old(event_state[1]) == 0
+                     || \old(event_state[1]) == -1)
+                ==> (event_state[1] == -2))
+            && (    (   \old(event_state[2]) == 0
+                     || \old(event_state[2]) == -1)
+                ==> (event_state[2] == -2))
+            && (    (   \old(event_state[3]) == 0
+                     || \old(event_state[3]) == -1)
+                ==> (event_state[3] == -2));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (   \old(event_state[0]) != 0
+                     && \old(event_state[0]) != -1)
+                ==> (event_state[0] == \old(event_state[0])))
+            && (    (   \old(event_state[1]) != 0
+                     && \old(event_state[1]) != -1)
+                ==> (event_state[1] == \old(event_state[1])))
+            && (    (   \old(event_state[2]) != 0
+                     && \old(event_state[2]) != -1)
+                ==> (event_state[2] == \old(event_state[2])))
+            && (    (   \old(event_state[3]) != 0
+                     && \old(event_state[3]) != -1)
+                ==> (event_state[3] == \old(event_state[3])));
+    void reset_all_events();
+    
+    // =====================================================================
+    // =====================================================================
+    // =====================================================================
+}
+

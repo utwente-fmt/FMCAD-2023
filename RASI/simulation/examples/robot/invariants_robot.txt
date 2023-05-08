@@ -1,0 +1,173 @@
+// This invariant has been generated with the simulation tool:
+inline resource reachable_states_controller_0() = true **
+(
+(
+process_state[0] == -1 && process_state[1] == -1 && 
+event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 0 && controller.pc == 0 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 0 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+);// invariant for controller_0 has 3 states.
+
+// This invariant has been generated with the simulation tool:
+inline resource reachable_states_controller_1() = true **
+(
+(
+process_state[0] == -1 && process_state[1] == 2 && 
+event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 0 && controller.pc == 1 
+)
+||
+(
+process_state[0] == -1 && process_state[1] == 2 && 
+event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -1 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+);// invariant for controller_1 has 6 states.
+
+// This invariant has been generated with the simulation tool:
+inline resource reachable_abstract_states_invariant() = true **
+(
+(
+process_state[0] == -1 && process_state[1] == -1 && 
+event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 0 && controller.pc == 0 
+)
+||
+(
+process_state[0] == -1 && process_state[1] == 2 && 
+event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 0 && controller.pc == 1 
+)
+||
+(
+process_state[0] == -1 && process_state[1] == 2 && 
+event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 0 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -1 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+);// invariant for scheduler has 8 states.
+
+// This invariant has been generated with the simulation tool:
+inline resource reachable_states_sensor_0() = true **
+(
+(
+process_state[0] == -1 && process_state[1] == -1 && 
+event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 0 && controller.pc == 0 
+)
+||
+(
+process_state[0] == -1 && process_state[1] == 2 && 
+event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 0 && controller.pc == 1 
+)
+);// invariant for sensor_0 has 2 states.
+
+// This invariant has been generated with the simulation tool:
+inline resource reachable_states_sensor_1() = true **
+(
+(
+process_state[0] == -1 && process_state[1] == 2 && 
+event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 0 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == -1 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+||
+(
+process_state[0] == 0 && process_state[1] == 2 && 
+event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -1 && 
+sensor.pc == 1 && controller.pc == 1 
+)
+);// invariant for sensor_1 has 6 states.
+
+// Process with pid 0 is called sensor
+// Process with pid 1 is called controller
+// Found a total of 25 states (8 real states).

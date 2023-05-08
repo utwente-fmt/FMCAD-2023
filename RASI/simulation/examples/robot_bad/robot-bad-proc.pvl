@@ -1,0 +1,1089 @@
+// ============================= //
+// ==== FAILS IN 33 SECONDS ==== //
+// ==== INVARIANT LENGTH: 24 === //
+// ============================= //
+
+class Sensor {
+    
+    Main m;
+    int pc;
+    
+    int dist;
+    
+    ensures Perm(m, write)
+            ** m == m0;
+    ensures Perm(dist, write);
+    ensures Perm(pc, write)
+            ** pc == 0;
+    Sensor(Main m0) {
+        m = m0;
+        pc = 0;
+    }
+
+    ensures \result >= 0 && \result < 256;
+    int getDistance ();
+
+    context Perm(m, 1\2)
+            ** m != null
+            ** Perm(m.sensor, read)
+            ** m.sensor == this
+            ** Perm(pc, 1\2)
+            ** pc == 0;
+    void run () {
+    
+        lock m;
+        
+        m.process_state = m.process_state[0 -> 0];
+        m.event_state = m.event_state[0 -> 2];
+        
+        pc = 1;
+
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.sensor == this
+            ** Perm(pc, 1\2)
+            ** pc == 1
+            ** m.reachable_states_sensor_1();
+        while(true) {
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_invariant()
+                ** m.sensor == this
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_sensor_1();
+            while(m.process_state[0] != -1 || m.event_state[0] != -2){
+                unlock m;
+                lock m;
+            }
+            
+            dist = getDistance();
+                
+            if (dist < m.MIN_DIST) {
+                // od.notify(SC_ZERO_TIME)
+                m.event_state = m.event_state[3 -> -1];
+            }
+            
+            m.process_state = m.process_state[0 -> 0];
+            m.event_state = m.event_state[0 -> 2];          
+        }
+       
+        unlock m;
+    }
+}
+
+   
+class Controller {
+    Main m;
+    int pc;
+    
+    boolean alarm_flag;
+
+    ensures Perm(m, write)
+            ** m == m0;
+    ensures Perm(alarm_flag, write)
+            ** !alarm_flag;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    Controller (Main m0) {
+        m = m0;
+        alarm_flag = false;
+        pc = 0;
+    }
+    
+    context Perm(m, 1\2)
+            ** m != null
+            ** Perm(m.controller, read)
+            ** m.controller == this
+            ** Perm(pc, 1\2)
+            ** pc == 0;
+    void run () {
+        lock m;
+        
+        m.process_state = m.process_state[1 -> 3];
+        
+        pc = 1;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.controller == this
+            ** Perm(pc, 1\2)
+            ** pc == 1
+            ** m.reachable_states_controller_1();
+        while (true) {
+
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_invariant()
+                ** m.controller == this
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_controller_1();
+            while(m.process_state[1] != -1 || m.event_state[3] != -2){
+                unlock m;
+                lock m;
+            }
+            
+            pc = 2;
+            
+            m.process_state = m.process_state[1 -> 1];
+            m.event_state = m.event_state[1 -> 1];
+
+            pc = 3;
+
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_invariant()
+                ** m.controller == this
+                ** Perm(pc, 1\2)
+                ** pc == 3
+                ** m.reachable_states_controller_3();
+            while(m.process_state[1] != -1 || m.event_state[1] != -2) {
+                unlock m;
+                lock m;
+            }
+            
+            pc = 4;
+            
+            assert (m.sensor.dist < m.MIN_DIST);
+
+            alarm_flag = true;
+
+            m.process_state = m.process_state[1 -> 3];
+            
+            pc = 1;
+        }
+
+        unlock m;
+    }
+}
+
+class Bad {
+    Main m;
+    int pc;
+  
+    ensures Perm(m, write)
+            ** m == m0;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    Bad(Main m0) {
+        m = m0;
+        pc = 0;
+    }
+
+    ensures \result >= 0 && \result < 256;
+    int getDistance ();
+
+    context Perm(m, 1\2)
+            ** m != null
+            ** Perm(m.bad, read)
+            ** m.bad == this
+            ** Perm(pc, 1\2)
+            ** pc == 0;
+    void run () {
+        
+        lock m;
+        
+        m.process_state = m.process_state[2 -> 2];
+        m.event_state = m.event_state[2 -> 1];
+
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_invariant()
+            ** m.bad == this
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_bad_0();
+        while(true) {
+          
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_invariant()
+                ** m.bad == this
+                ** Perm(pc, 1\2)
+                ** pc == 0
+                ** m.reachable_states_bad_0();
+            while(m.process_state[2] != -1 || m.event_state[2] != -2){
+                unlock m;
+                lock m;
+            }
+            
+            m.sensor.dist = getDistance();
+
+            m.process_state = m.process_state[2 -> 2];
+            m.event_state = m.event_state[2 -> 1];
+        }
+        
+        unlock m;
+    }
+  
+}
+
+class Main {
+    // Scheduling state
+    seq<int> process_state;
+    seq<int> event_state;
+    
+    // Object instances
+    Sensor sensor;
+    Controller controller;
+    Bad bad;
+    
+    // Parameters
+    int MIN_DIST;
+    
+    inline resource scheduler_permission_invariant() = true
+  
+        ** Perm(process_state, write) ** |process_state| == 3
+        ** Perm(event_state, write) ** |event_state| == 4
+    
+        ** (\forall int i = 0 .. |process_state|;    {: process_state[i] :} == -1
+                                                  || (   0 <= process_state[i]
+                                                      && process_state[i] < |event_state|));
+                                                      
+    inline resource parameter_permission_invariant() = true
+        ** Perm(MIN_DIST, read)
+        ** MIN_DIST > 0;
+
+    inline resource global_permission_invariant() = true
+        ** scheduler_permission_invariant()
+        
+        // PARAMETERS
+        ** parameter_permission_invariant()
+
+        // SENSOR
+        ** Perm(sensor, read)
+        ** sensor != null
+        ** Perm(sensor.dist, write)
+        ** Perm(sensor.pc, 1\2)
+
+        // CONTROLLER
+        ** Perm(controller, read)
+        ** controller != null
+        ** Perm(controller.alarm_flag, write)
+        ** Perm(controller.pc, 1\2)
+        
+        // BAD
+        ** Perm(bad, read)
+        ** bad != null
+        ** Perm(bad.pc, 1\2)
+        
+        // USER-DEFINED INVARIANTS
+        
+        // Helper invariants
+        ** (event_state[3] >= -1 ==> sensor.dist < MIN_DIST)
+        ** (event_state[3] == -2 ==> sensor.dist < MIN_DIST)
+        ** (event_state[1] >= -1 ==> sensor.dist < MIN_DIST)
+        ** (event_state[1] == -2 ==> sensor.dist < MIN_DIST)
+        ;
+        
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_states_bad_0() = true **
+        (
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == 1 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        );// invariant for bad_0 has 21 states.
+
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_states_controller_0() = true **
+        (
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        );// invariant for controller_0 has 4 states.
+
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_states_controller_1() = true **
+        (
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        );// invariant for controller_1 has 14 states.
+
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_states_controller_3() = true **
+        (
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == 1 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        );// invariant for controller_3 has 3 states.
+
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_abstract_states_invariant() = true **
+        (
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == 1 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        );// invariant for scheduler has 21 states.
+
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_states_sensor_0() = true **
+        (
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -3 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 0 && controller.pc == 1 && bad.pc == 0 
+        )
+        );// invariant for sensor_0 has 4 states.
+
+        // This invariant has been generated with the simulation tool:
+        inline resource reachable_states_sensor_1() = true **
+        (
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == -1 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == -2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 0 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == -1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 1 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == 1 && event_state[2] == 1 && event_state[3] == -2 && 
+        sensor.pc == 1 && controller.pc == 3 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -3 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == -1 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == -2 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 1 && event_state[1] == -2 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -3 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        ||
+        (
+        process_state[0] == 0 && process_state[1] == 3 && process_state[2] == 2 && 
+        event_state[0] == 2 && event_state[1] == -3 && event_state[2] == 1 && event_state[3] == -1 && 
+        sensor.pc == 1 && controller.pc == 1 && bad.pc == 0 
+        )
+        );// invariant for sensor_1 has 17 states.
+
+        // Process with pid 0 is called sensor
+        // Process with pid 1 is called controller
+        // Process with pid 2 is called bad
+        // Found a total of 84 states (21 real states).
+        
+        
+        
+    inline resource global_invariant() = global_permission_invariant();
+
+    resource lock_invariant() = global_invariant() ** reachable_abstract_states_invariant();
+
+    requires md0 > 0;
+    ensures Perm(sensor, read)
+            ** sensor != null
+            ** Perm(sensor.m, 1\2)
+            ** sensor.m == this
+            ** Perm(sensor.pc, 1\2)
+            ** sensor.pc == 0;
+    ensures Perm(controller, read)
+            ** controller != null
+            ** Perm(controller.m, 1\2)
+            ** controller.m == this
+            ** Perm(controller.pc, 1\2)
+            ** controller.pc == 0;
+    ensures Perm(bad, read)
+            ** bad != null
+            ** Perm(bad.m, 1\2)
+            ** bad.m == this
+            ** Perm(bad.pc, 1\2)
+            ** bad.pc == 0;
+    ensures idle(sensor);
+    ensures idle(controller);
+    Main (int md0) {
+        process_state = [-1,-1,-1];
+        event_state   = [-3,-3,-3,-3];
+        
+        MIN_DIST = md0;
+
+        sensor = new Sensor(this);
+        controller = new Controller(this);
+        bad = new Bad(this);
+    }
+
+    context Perm(sensor, read)
+            ** sensor != null
+            ** Perm(sensor.m, 1\2)
+            ** sensor.m == this
+            ** Perm(sensor.pc, 1\2)
+            ** sensor.pc == 0;
+    context Perm(controller, read)
+            ** controller != null
+            ** Perm(controller.m, 1\2)
+            ** controller.m == this
+            ** Perm(controller.pc, 1\2)
+            ** controller.pc == 0;
+    context Perm(bad, read)
+            ** bad != null
+            ** Perm(bad.m, 1\2)
+            ** bad.m == this
+            ** Perm(bad.pc, 1\2)
+            ** bad.pc == 0;
+    context idle(sensor);
+    context idle(controller);
+    context idle(bad);
+    void main() {
+        lock this;
+        fork sensor;
+        fork controller;
+        fork bad;
+        unlock this;
+        
+        // Scheduler
+        loop_invariant true;
+        while (true) {
+            lock this;
+                
+            // Wake up processes waiting 0 time without delta delay
+            immediate_wakeup();
+            
+            // Also reset any events that triggered
+            reset_events_no_delta();
+
+            // If still no processes are ready, advance delay or perform a delta cycle
+            if (process_state[0] != -1 && process_state[1] != -1 && process_state[2] != -1) {
+                
+                // Find the minimum delay until the next interesting point
+                int min_advance = find_minimum_advance(event_state);
+                if (min_advance == -1) {
+                    min_advance = 0;
+                }
+                
+                // Advance delay to the next interesting point
+                event_state = [event_state[0] < -1 ? -3 : event_state[0] - min_advance,
+                               event_state[1] < -1 ? -3 : event_state[1] - min_advance,
+                               event_state[2] < -1 ? -3 : event_state[2] - min_advance,
+                               event_state[3] < -1 ? -3 : event_state[3] - min_advance];
+                
+                // Wake up processes if necessary
+                wakeup_after_wait();
+                
+                // Also reset any events that triggered
+                reset_all_events();
+            }
+            
+            unlock this;
+        }
+        
+        join sensor;
+        join controller;
+        join bad;
+    }
+    
+    // =====================================================================
+    // ==================== Scheduling Helper Functions ====================
+    // =====================================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures event_state == \old(event_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (   \old(process_state[0]) >= 0
+                     && \old(event_state[\old(process_state[0])]) == 0)
+                ==> (process_state[0] == -1))
+            && (    (   \old(process_state[1]) >= 0
+                     && \old(event_state[\old(process_state[1])]) == 0)
+                ==> (process_state[1] == -1))
+            && (    (   \old(process_state[2]) >= 0
+                     && \old(event_state[\old(process_state[2])]) == 0)
+                ==> (process_state[2] == -1));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (!(   \old(process_state[0]) >= 0
+                       && \old(event_state[\old(process_state[0])]) == 0))
+                ==> (process_state[0] == \old(process_state[0])))
+            && (    (!(   \old(process_state[1]) >= 0
+                       && \old(event_state[\old(process_state[1])]) == 0))
+                ==> (process_state[1] == \old(process_state[1])))
+            && (    (!(   \old(process_state[2]) >= 0
+                       && \old(event_state[\old(process_state[2])]) == 0))
+                ==> (process_state[2] == \old(process_state[2])));
+    void immediate_wakeup();
+    // ===============================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures process_state == \old(process_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (\old(event_state[0]) == 0)
+                ==> (event_state[0] == -2))
+            && (    (\old(event_state[1]) == 0)
+                ==> (event_state[1] == -2))
+            && (    (\old(event_state[2]) == 0)
+                ==> (event_state[2] == -2))
+            && (    (\old(event_state[3]) == 0)
+                ==> (event_state[3] == -2));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (\old(event_state[0]) != 0)
+                ==> (event_state[0] == \old(event_state[0])))
+            && (    (\old(event_state[1]) != 0)
+                ==> (event_state[1] == \old(event_state[1])))
+            && (    (\old(event_state[2]) != 0)
+                ==> (event_state[2] == \old(event_state[2])))
+            && (    (\old(event_state[3]) != 0)
+                ==> (event_state[3] == \old(event_state[3])));
+    void reset_events_no_delta();
+    // ===============================================================
+    
+    // Requirements to check for this method to work
+    requires |vals| == 4;
+    // The result is a lower bound of all timeouts
+    ensures    (vals[0] < -1 || \result <= vals[0])
+            && (vals[1] < -1 || \result <= vals[1])
+            && (vals[2] < -1 || \result <= vals[2])
+            && (vals[3] < -1 || \result <= vals[3]);
+    // If no timeout exists, then the result is 0; otherwise, it is the minimum of all existing timeouts
+    ensures    (    (   vals[0] < -1
+                     && vals[1] < -1
+                     && vals[2] < -1
+                     && vals[3] < -1)
+                ==> \result == 0)
+            && (    (   vals[0] >= -1
+                     || vals[1] >= -1
+                     || vals[2] >= -1
+                     || vals[3] >= -1)
+                ==> (   (vals[0] >= -1 && \result == vals[0])
+                     || (vals[1] >= -1 && \result == vals[1])
+                     || (vals[2] >= -1 && \result == vals[2])
+                     || (vals[3] >= -1 && \result == vals[3])));
+    pure int find_minimum_advance(seq<int> vals);
+    // ===============================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures event_state == \old(event_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (\old(process_state[0]) >= 0
+                     && (   \old(event_state[\old(process_state[0])]) == 0
+                         || \old(event_state[\old(process_state[0])]) == -1))
+                ==> (process_state[0] == -1))
+            && (    (\old(process_state[1]) >= 0
+                     && (   \old(event_state[\old(process_state[1])]) == 0
+                         || \old(event_state[\old(process_state[1])]) == -1))
+                ==> (process_state[1] == -1))
+            && (    (\old(process_state[2]) >= 0
+                     && (   \old(event_state[\old(process_state[2])]) == 0
+                         || \old(event_state[\old(process_state[2])]) == -1))
+                ==> (process_state[2] == -1));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (!(   \old(process_state[0]) >= 0
+                       && (   \old(event_state[\old(process_state[0])]) == 0
+                           || \old(event_state[\old(process_state[0])]) == -1)))
+                ==> (process_state[0] == \old(process_state[0])))
+            && (    (!(   \old(process_state[1]) >= 0
+                       && (   \old(event_state[\old(process_state[1])]) == 0
+                           || \old(event_state[\old(process_state[1])]) == -1)))
+                ==> (process_state[1] == \old(process_state[1])))
+            && (    (!(   \old(process_state[2]) >= 0
+                       && (   \old(event_state[\old(process_state[2])]) == 0
+                           || \old(event_state[\old(process_state[2])]) == -1)))
+                ==> (process_state[2] == \old(process_state[2])));
+    void wakeup_after_wait();
+    // ===============================================================
+    
+    // Context: The lock is held by the scheduler
+    context held(this) ** scheduler_permission_invariant();
+    // Everything that is not affected remains untouched
+    ensures process_state == \old(process_state);
+    // If the conditions are met, the entries of the sequences will be altered
+    ensures    (    (   \old(event_state[0]) == 0
+                     || \old(event_state[0]) == -1)
+                ==> (event_state[0] == -2))
+            && (    (   \old(event_state[1]) == 0
+                     || \old(event_state[1]) == -1)
+                ==> (event_state[1] == -2))
+            && (    (   \old(event_state[2]) == 0
+                     || \old(event_state[2]) == -1)
+                ==> (event_state[2] == -2))
+            && (    (   \old(event_state[3]) == 0
+                     || \old(event_state[3]) == -1)
+                ==> (event_state[3] == -2));
+    // If the conditions are not met, the entries will remain the same
+    ensures    (    (   \old(event_state[0]) != 0
+                     && \old(event_state[0]) != -1)
+                ==> (event_state[0] == \old(event_state[0])))
+            && (    (   \old(event_state[1]) != 0
+                     && \old(event_state[1]) != -1)
+                ==> (event_state[1] == \old(event_state[1])))
+            && (    (   \old(event_state[2]) != 0
+                     && \old(event_state[2]) != -1)
+                ==> (event_state[2] == \old(event_state[2])))
+            && (    (   \old(event_state[3]) != 0
+                     && \old(event_state[3]) != -1)
+                ==> (event_state[3] == \old(event_state[3])));
+    void reset_all_events();
+    
+    // =====================================================================
+    // =====================================================================
+    // =====================================================================
+}

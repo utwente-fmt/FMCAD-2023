@@ -1,0 +1,459 @@
+class TickCounter_0 {
+    Main m;
+    int pc;
+    
+    int speed;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(speed, write);
+    TickCounter_0(Main m_param) {
+        m = m_param;
+        pc = 0;
+    }
+    
+    ensures 0 <= \result && \result <= 100;
+    pure int randomize__speed();
+    
+    context Perm(m, 1\2)
+        ** m != null
+        ** Perm(m.tickcounter_0, read)
+        ** m.tickcounter_0 == this
+        ** Perm(speed, 1\2)
+        ** Perm(pc, 1\2)
+        ** pc == 0;
+    void run() {
+        lock m;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.tickcounter_0 == this
+            ** Perm(speed, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_tickcounter_0_0()
+            ** m.process_state[2] == -1;
+        while (true) {
+        
+            m.process_state = m.process_state[2 -> 1];
+            m.event_state = m.event_state[1 -> 1];
+            
+            pc = 1;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_0 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_tickcounter_0_1();
+            while (m.process_state[2] != -1 || m.event_state[1] != -2) {
+                unlock m;
+                lock m;
+            }
+            
+            pc = 2;
+            
+            speed = randomize__speed();
+            if (m.event_state[13] == -3) {
+                m.event_state = m.event_state[13 -> 1];     // Prove timing
+            }
+            
+            boolean initial_traverse = true;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_0 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** m.process_state[2] == -1
+                ** (initial_traverse ==> (pc == 2 ** m.reachable_states_tickcounter_0_2()))
+                ** (!initial_traverse ==> (pc == 3 ** m.reachable_states_tickcounter_0_3()));
+            while (|m.fifo_0.buffer| >= m.FIFO_SIZE) {
+                
+                initial_traverse = false;
+            
+                m.process_state = m.process_state[2 -> 5];
+                
+                pc = 3;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.tickcounter_0 == this
+                    ** Perm(speed, 1\2)
+                    ** Perm(pc, 1\2)
+                    ** pc == 3
+                    ** m.reachable_states_tickcounter_0_3()
+                    ** (!initial_traverse);
+                while (m.process_state[2] != -1 || m.event_state[5] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            m.fifo_0.fifo_write(speed);
+            
+            pc = 0;
+        }
+        unlock m;
+    }
+}
+
+class TickCounter_1 {
+    Main m;
+    int pc;
+    
+    int speed;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(speed, write);
+    TickCounter_1(Main m_param) {
+        m = m_param;
+        pc = 0;
+    }
+    
+    ensures 0 <= \result && \result <= 100;
+    pure int randomize__speed();
+    
+    context Perm(m, 1\2)
+        ** m != null
+        ** Perm(m.tickcounter_1, read)
+        ** m.tickcounter_1 == this
+        ** Perm(speed, 1\2)
+        ** Perm(pc, 1\2)
+        ** pc == 0;
+    void run() {
+        lock m;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.tickcounter_1 == this
+            ** Perm(speed, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_tickcounter_1_0()
+            ** m.process_state[3] == -1;
+        while (true) {
+        
+            m.process_state = m.process_state[3 -> 2];
+            m.event_state = m.event_state[2 -> 1];
+            
+            pc = 1;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_1 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_tickcounter_1_1();
+            while (m.process_state[3] != -1 || m.event_state[2] != -2) {
+                unlock m;
+                lock m;
+            }
+            
+            pc = 2;
+            
+            speed = randomize__speed();
+            if (m.event_state[14] == -3) {
+                m.event_state = m.event_state[14 -> 1];     // Prove timing
+            }
+            
+            boolean initial_traverse = true;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_1 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** m.process_state[3] == -1
+                ** (initial_traverse ==> (pc == 2 ** m.reachable_states_tickcounter_1_2()))
+                ** (!initial_traverse ==> (pc == 3 ** m.reachable_states_tickcounter_1_3()));
+            while (|m.fifo_1.buffer| >= m.FIFO_SIZE) {
+            
+                initial_traverse = false;
+            
+                m.process_state = m.process_state[3 -> 7];
+                
+                pc = 3;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.tickcounter_1 == this
+                    ** Perm(speed, 1\2)
+                    ** Perm(pc, 1\2)
+                    ** pc == 3
+                    ** m.reachable_states_tickcounter_1_3()
+                    ** (!initial_traverse);
+                while (m.process_state[3] != -1 || m.event_state[7] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            m.fifo_1.fifo_write(speed);
+            
+            pc = 0;
+        }
+        unlock m;
+    }
+}
+
+class TickCounter_2 {
+    Main m;
+    int pc;
+    
+    int speed;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(speed, write);
+    TickCounter_2(Main m_param) {
+        m = m_param;
+        pc = 0;
+    }
+    
+    ensures 0 <= \result && \result <= 100;
+    pure int randomize__speed();
+    
+    context Perm(m, 1\2)
+        ** m != null
+        ** Perm(m.tickcounter_2, read)
+        ** m.tickcounter_2 == this
+        ** Perm(speed, 1\2)
+        ** Perm(pc, 1\2)
+        ** pc == 0;
+    void run() {
+        lock m;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.tickcounter_2 == this
+            ** Perm(speed, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_tickcounter_2_0()
+            ** m.process_state[4] == -1;
+        while (true) {
+        
+            m.process_state = m.process_state[4 -> 3];
+            m.event_state = m.event_state[3 -> 1];
+            
+            pc = 1;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_2 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_tickcounter_2_1();
+            while (m.process_state[4] != -1 || m.event_state[3] != -2) {
+                unlock m;
+                lock m;
+            }
+            
+            pc = 2;
+            
+            speed = randomize__speed();
+            if (m.event_state[15] == -3) {
+                m.event_state = m.event_state[15 -> 1];     // Prove timing
+            }
+            
+            boolean initial_traverse = true;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_2 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** m.process_state[4] == -1
+                ** (initial_traverse ==> (pc == 2 ** m.reachable_states_tickcounter_2_2()))
+                ** (!initial_traverse ==> (pc == 3 ** m.reachable_states_tickcounter_2_3()));
+            while (|m.fifo_2.buffer| >= m.FIFO_SIZE) {
+            
+                initial_traverse = false;
+            
+                m.process_state = m.process_state[4 -> 9];
+                
+                pc = 3;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.tickcounter_2 == this
+                    ** Perm(speed, 1\2)
+                    ** Perm(pc, 1\2)
+                    ** pc == 3
+                    ** m.reachable_states_tickcounter_2_3()
+                    ** (!initial_traverse);
+                while (m.process_state[4] != -1 || m.event_state[9] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            m.fifo_2.fifo_write(speed);
+            
+            pc = 0;
+        }
+        unlock m;
+    }
+}
+
+class TickCounter_3 {
+    Main m;
+    int pc;
+    
+    int speed;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(speed, write);
+    TickCounter_3(Main m_param) {
+        m = m_param;
+        pc = 0;
+    }
+    
+    ensures 0 <= \result && \result <= 100;
+    pure int randomize__speed();
+    
+    context Perm(m, 1\2)
+        ** m != null
+        ** Perm(m.tickcounter_3, read)
+        ** m.tickcounter_3 == this
+        ** Perm(speed, 1\2)
+        ** Perm(pc, 1\2)
+        ** pc == 0;
+    void run() {
+        lock m;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.tickcounter_3 == this
+            ** Perm(speed, 1\2)
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_tickcounter_3_0()
+            ** m.process_state[5] == -1;
+        while (true) {
+        
+            m.process_state = m.process_state[5 -> 4];
+            m.event_state = m.event_state[4 -> 1];
+            
+            pc = 1;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_3 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_tickcounter_3_1(); 
+            while (m.process_state[5] != -1 || m.event_state[4] != -2) {
+                unlock m;
+                lock m;
+            }
+            
+            pc = 2;
+            
+            speed = randomize__speed();
+            if (m.event_state[16] == -3) {
+                m.event_state = m.event_state[16 -> 1];     // Prove timing
+            }
+            
+            boolean initial_traverse = true;
+            
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.tickcounter_3 == this
+                ** Perm(speed, 1\2)
+                ** Perm(pc, 1\2)
+                ** m.process_state[5] == -1
+                ** (initial_traverse ==> (pc == 2 ** m.reachable_states_tickcounter_3_2()))
+                ** (!initial_traverse ==> (pc == 3 ** m.reachable_states_tickcounter_3_3()));
+            while (|m.fifo_3.buffer| >= m.FIFO_SIZE) {
+            
+                initial_traverse = false;
+            
+                m.process_state = m.process_state[5 -> 11];
+                
+                pc = 3;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.tickcounter_3 == this
+                    ** Perm(speed, 1\2)
+                    ** Perm(pc, 1\2)
+                    ** pc == 3
+                    ** m.reachable_states_tickcounter_3_3()
+                    ** (!initial_traverse);
+                while (m.process_state[5] != -1 || m.event_state[11] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            m.fifo_3.fifo_write(speed);
+            
+            pc = 0;
+        }
+        unlock m;
+    }
+}

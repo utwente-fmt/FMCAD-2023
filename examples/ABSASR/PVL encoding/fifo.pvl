@@ -1,0 +1,339 @@
+class SC_FIFO_0 {
+    Main m;
+    
+    seq<int> buffer;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(buffer, write)
+            ** buffer == [t: int];
+    SC_FIFO_0(Main m_param) {
+        m = m_param;
+        buffer = seq<int> {};
+    }
+    
+    // --------------------------------------------- //
+    //                   FIFO READ
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| <= 0)
+    //     wait(write_event);
+    // value = fifo_read();
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_0_permission_invariant()
+        ** m.fifo_0 == this;
+    // Method precondition
+    requires 0 < |buffer|;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures \result == \old(buffer[0])
+        ** buffer == \old(buffer[1 .. |buffer|]);
+    ensures m.event_state == \old(m.event_state[5 -> -1]);
+    int fifo_read();
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    
+    
+    // --------------------------------------------- //
+    //                   FIFO WRITE
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| >= size - 1)
+    //     wait(read_event);
+    // fifo_write(value);
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_0_permission_invariant()
+        ** m.fifo_0 == this;
+    // Method precondition
+    requires |buffer| < m.FIFO_SIZE;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures buffer == \old(buffer ++ newVal);
+    ensures m.event_state == \old(m.event_state[6 -> -1]);
+    void fifo_write(int newVal);
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+}
+
+class SC_FIFO_1 {
+    Main m;
+    
+    seq<int> buffer;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(buffer, write)
+            ** buffer == [t: int];
+    SC_FIFO_1(Main m_param) {
+        m = m_param;
+        buffer = seq<int> {};
+    }
+    
+    // --------------------------------------------- //
+    //                   FIFO READ
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| <= 0)
+    //     wait(write_event);
+    // value = fifo_read();
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_1_permission_invariant()
+        ** m.fifo_1 == this;
+    // Method precondition
+    requires 0 < |buffer|;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures \result == \old(buffer[0])
+        ** buffer == \old(buffer[1 .. |buffer|]);
+    ensures m.event_state == \old(m.event_state[7 -> -1]);
+    int fifo_read();
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    
+    
+    // --------------------------------------------- //
+    //                   FIFO WRITE
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| >= size - 1)
+    //     wait(read_event);
+    // fifo_write(value);
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_1_permission_invariant()
+        ** m.fifo_1 == this;
+    // Method precondition
+    requires |buffer| < m.FIFO_SIZE;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures buffer == \old(buffer ++ newVal);
+    ensures m.event_state == \old(m.event_state[8 -> -1]);
+    void fifo_write(int newVal);
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+}
+
+class SC_FIFO_2 {
+    Main m;
+    
+    seq<int> buffer;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(buffer, write)
+            ** buffer == [t: int];
+    SC_FIFO_2(Main m_param) {
+        m = m_param;
+        buffer = seq<int> {};
+    }
+    
+    // --------------------------------------------- //
+    //                   FIFO READ
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| <= 0)
+    //     wait(write_event);
+    // value = fifo_read();
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_2_permission_invariant()
+        ** m.fifo_2 == this;
+    // Method precondition
+    requires 0 < |buffer|;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures \result == \old(buffer[0])
+        ** buffer == \old(buffer[1 .. |buffer|]);
+    ensures m.event_state == \old(m.event_state[9 -> -1]);
+    int fifo_read();
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    
+    
+    // --------------------------------------------- //
+    //                   FIFO WRITE
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| >= size - 1)
+    //     wait(read_event);
+    // fifo_write(value);
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_2_permission_invariant()
+        ** m.fifo_2 == this;
+    // Method precondition
+    requires |buffer| < m.FIFO_SIZE;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures buffer == \old(buffer ++ newVal);
+    ensures m.event_state == \old(m.event_state[10 -> -1]);
+    void fifo_write(int newVal);
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+}
+
+class SC_FIFO_3 {
+    Main m;
+    
+    seq<int> buffer;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(buffer, write)
+            ** buffer == [t: int];
+    SC_FIFO_3(Main m_param) {
+        m = m_param;
+        buffer = seq<int> {};
+    }
+    
+    // --------------------------------------------- //
+    //                   FIFO READ
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| <= 0)
+    //     wait(write_event);
+    // value = fifo_read();
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_3_permission_invariant()
+        ** m.fifo_3 == this;
+    // Method precondition
+    requires 0 < |buffer|;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures \result == \old(buffer[0])
+        ** buffer == \old(buffer[1 .. |buffer|]);
+    ensures m.event_state == \old(m.event_state[11 -> -1]);
+    int fifo_read();
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    
+    
+    // --------------------------------------------- //
+    //                   FIFO WRITE
+    // 
+    // waiting for event is left to caller
+    //
+    // Syntax:
+    //
+    // while (|buffer| >= size - 1)
+    //     wait(read_event);
+    // fifo_write(value);
+    //
+    // --------------------------------------------- //
+    
+    // Context permissions
+    context Perm(m, read)
+        ** m != null
+        ** held(m)
+        ** m.parameter_permission_invariant()
+        ** m.scheduler_permission_invariant()
+        ** m.fifo_3_permission_invariant()
+        ** m.fifo_3 == this;
+    // Method precondition
+    requires |buffer| < m.FIFO_SIZE;
+    // State that is not relevant remains untouched
+    ensures m.process_state == \old(m.process_state);
+    // Method effect
+    ensures buffer == \old(buffer ++ newVal);
+    ensures m.event_state == \old(m.event_state[12 -> -1]);
+    void fifo_write(int newVal);
+    
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+    // --------------------------------------------- //
+}

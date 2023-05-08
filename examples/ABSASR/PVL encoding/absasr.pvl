@@ -1,0 +1,696 @@
+class ABSASR {
+    SC_FIFO_0 bus_vr;
+    SC_FIFO_1 bus_vl;
+    SC_FIFO_2 bus_hr;
+    SC_FIFO_3 bus_hl;
+    seq<int> v;
+    seq<int> a;
+    int temp_fv;
+    int fv;
+    int fa;
+    seq<int> lambda;
+    seq<int> s;
+    seq<int> p;
+    
+    context Perm(m_param.fifo_0, 1\2)
+         ** Perm(m_param.fifo_1, 1\2)
+         ** Perm(m_param.fifo_2, 1\2)
+         ** Perm(m_param.fifo_3, 1\2);
+    ensures Perm(bus_vr, read)
+            ** bus_vr == m_param.fifo_0;
+    ensures Perm(bus_vl, read)
+            ** bus_vl == m_param.fifo_1;
+    ensures Perm(bus_hr, read)
+            ** bus_hr == m_param.fifo_2;
+    ensures Perm(bus_hl, read)
+            ** bus_hl == m_param.fifo_3;
+    ensures Perm(v, write)
+            ** |v| == 4;
+    ensures Perm(a, write)
+            ** |a| == 4;
+    ensures Perm(temp_fv, write);
+    ensures Perm(fv, write);
+    ensures Perm(fa, write);
+    ensures Perm(lambda, write)
+            ** |lambda| == 4;
+    ensures Perm(s, write)
+            ** |s| == 4;
+    ensures Perm(p, write)
+            ** |p| == 4;
+    ABSASR (Main m_param) {
+        bus_vr = m_param.fifo_0;
+        bus_vl = m_param.fifo_1;
+        bus_hr = m_param.fifo_2;
+        bus_hl = m_param.fifo_3;
+        
+        v = [0, 0, 0, 0];
+        a = [0, 0, 0, 0];
+        lambda = [0, 0, 0, 0];
+        s = [0, 0, 0, 0];
+        p = [0, 0, 0, 0];
+    }
+}
+
+class ABSASR_main {
+    Main m;
+    int pc;
+    
+    ABSASR o_inst;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(o_inst, read)
+            ** o_inst == absasr_instance;
+    ABSASR_main(Main m_param, ABSASR absasr_instance) {
+        m = m_param;
+        pc = 0;
+        o_inst = absasr_instance;
+    }
+              
+    context Perm(m, 1\2)
+        ** m != null
+        ** Perm(m.absasr_main, read)
+        ** m.absasr_main == this
+        ** Perm(pc, 1\2)
+        ** pc == 0;  
+    void run() {
+        lock m;
+        
+        int i;
+        
+        loop_invariant true 
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.absasr_main == this
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_absasr_main_0()
+            ** (0 <= i && i <= 4);
+        loop_invariant true
+            ** (\forall int z = 0 .. i; {: o_inst.s[z] :} == 1)
+            ** (\forall int z = 0 .. i; {: o_inst.v[z] :} == 0)
+            ** (\forall int z = 0 .. i; {: o_inst.a[z] :} == 0);
+        for(i = 0; i < 4; i = i + 1) {
+	        o_inst.s = o_inst.s[i -> 1];
+	        o_inst.v = o_inst.v[i -> 0];
+	        o_inst.a = o_inst.a[i -> 0];
+        }
+        
+        // Initialization has worked correctly
+        assert (\forall int z = 0 .. |o_inst.s|; {: o_inst.s[z] :} == 1);
+        assert (\forall int z = 0 .. |o_inst.v|; {: o_inst.v[z] :} == 0);
+        assert (\forall int z = 0 .. |o_inst.a|; {: o_inst.a[z] :} == 0);
+        
+        loop_invariant true 
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.absasr_main == this
+            ** Perm(pc, 1\2)
+            ** pc == 0
+            ** m.reachable_states_absasr_main_0();
+        while (true) {
+            m.process_state = m.process_state[0 -> 0];
+            m.event_state = m.event_state[0 -> 1];
+            
+            pc = 1;
+            
+            loop_invariant true 
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.absasr_main == this
+                ** Perm(pc, 1\2)
+                ** pc == 1
+                ** m.reachable_states_absasr_main_1();
+            while (m.process_state[0] != -1 || m.event_state[0] != -2) {
+                unlock m;
+                lock m;
+            }
+            
+            pc = 0;
+            
+            i = 0;
+            if (abs(o_inst.a[1]) < abs(o_inst.a[i])) {
+                i = 1;
+            }
+            if (abs(o_inst.a[2]) < abs(o_inst.a[i])) {
+                i = 2;
+            }
+            if (abs(o_inst.a[3]) < abs(o_inst.a[i])) {
+                i = 3;
+            }
+            // The selected wheel is indeed the one that is accelerated least
+            assert (\forall int z = 0 .. |o_inst.a|; abs(o_inst.a[i]) <= {: abs(o_inst.a[z]) :});
+            
+            o_inst.temp_fv = o_inst.v[i];
+            o_inst.fa = o_inst.temp_fv - o_inst.fv;
+            
+            if (o_inst.fa < 0) {
+                if (o_inst.fa < m.MINUS_A) {
+                    o_inst.fv = o_inst.fv + m.AREF;
+                }
+                else {
+                    o_inst.fv = o_inst.temp_fv;
+                }
+                _ABS();
+            }
+            else if (o_inst.fa > 0) {              
+                o_inst.fv = o_inst.temp_fv;
+                _ASR();
+            }
+        }
+        
+        unlock m;
+    }
+    
+    ensures    ((val >= 0) ==> (\result == val))
+            && ((val < 0) ==> (\result == -val));
+    pure int abs(int val) {
+        if (val >= 0) {
+            return val;
+        }
+        else {
+            return -val;
+        }
+    }
+    
+    context Perm(m, 1\2)
+        ** m != null
+        ** held(m)
+        ** m.global_permission_invariant()
+        ** m.absasr_main == this
+        ** pc == 0
+        ** m.reachable_states_absasr_main_0();
+    // The measured values are not changed by the ABS
+    ensures o_inst.v == \old(o_inst.v)
+        ** o_inst.a == \old(o_inst.a)
+        ** o_inst.fv == \old(o_inst.fv)
+        ** o_inst.fa == \old(o_inst.fa);
+    // If the speed is not high enough for the ABS to activate, nothing will be changed
+    ensures (o_inst.fv <= m.ABSACTIVE
+             ==> (   o_inst.lambda == \old(o_inst.lambda)
+                  && o_inst.p == \old(o_inst.p)
+                  && o_inst.s == \old(o_inst.s)));
+    // If the ABS activates, it calculates the correct slippage for each wheel
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; {: o_inst.lambda[z] :} == ((o_inst.fv - o_inst.v[z]) * 100) / o_inst.fv));
+    // The ABS implementation represents a state machine with 8 states and given transitions.
+    // STATE 1 -> STATE 2 if wheel deceleration is too strong, braking pressure constant
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 1 && o_inst.a[z] < m.MINUS_A)
+                                                    ==> {: o_inst.p[z] :} == 0)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 1 && o_inst.a[z] < m.MINUS_A)
+                                                    ==> {: o_inst.s[z] :} == 2)));
+    // STATE 2 -> STATE 3 if slippage is too high, braking pressure decreasing
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 2 && o_inst.lambda[z] > m.LAMBDA_ABS)
+                                                    ==> {: o_inst.p[z] :} == -1)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 2 && o_inst.lambda[z] > m.LAMBDA_ABS)
+                                                    ==> {: o_inst.s[z] :} == 3)));
+    // STATE 3 -> STATE 4 if deceleration has stabilized, braking pressure constant
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 3 && o_inst.a[z] > m.MINUS_A)
+                                                    ==> {: o_inst.p[z] :} == 0)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 3 && o_inst.a[z] > m.MINUS_A)
+                                                    ==> {: o_inst.s[z] :} == 4)));
+    // STATE 4 -> STATE 5 if wheel acceleration is too high, braking pressure increasing
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 4 && o_inst.a[z] > m.PLUS_BIG_A)
+                                                    ==> {: o_inst.p[z] :} == 2)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 4 && o_inst.a[z] > m.PLUS_BIG_A)
+                                                    ==> {: o_inst.s[z] :} == 5)));
+    // STATE 5 -> STATE 6 if wheel acceleration has stabilized, braking pressure constant
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 5 && o_inst.a[z] < m.PLUS_BIG_A)
+                                                    ==> {: o_inst.p[z] :} == 0)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 5 && o_inst.a[z] < m.PLUS_BIG_A)
+                                                    ==> {: o_inst.s[z] :} == 6)));
+    // STATE 6 -> STATE 7 if wheel acceleration is near zero, braking pressure gradually increasing
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 6 && o_inst.a[z] < m.PLUS_A)
+                                                    ==> {: o_inst.p[z] :} == 1)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 6 && o_inst.a[z] < m.PLUS_A)
+                                                    ==> {: o_inst.s[z] :} == 7)));
+    // STATE 7 -> STATE 8 if wheel deceleration is too strong again, braking pressure decreasing
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 7 && o_inst.a[z] < m.MINUS_A)
+                                                    ==> {: o_inst.p[z] :} == -1)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 7 && o_inst.a[z] < m.MINUS_A)
+                                                    ==> {: o_inst.s[z] :} == 8)));
+    // STATE 8 -> STATE 4 if wheel deceleration has stabilized, braking pressure constant
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.p|; ((\old(o_inst.s[z]) == 8 && o_inst.a[z] > m.MINUS_A)
+                                                    ==> {: o_inst.p[z] :} == 0)));
+    ensures (o_inst.fv > m.ABSACTIVE
+             ==> (\forall int z = 0 .. |o_inst.s|; ((\old(o_inst.s[z]) == 8 && o_inst.a[z] > m.MINUS_A)
+                                                    ==> {: o_inst.s[z] :} == 4)));
+    void _ABS() {
+        if (o_inst.fv > m.ABSACTIVE) {
+            
+            loop_invariant true 
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.absasr_main == this
+                ** pc == 0
+                ** m.reachable_states_absasr_main_0()
+                ** (0 <= i && i <= 4);
+            loop_invariant true
+                ** o_inst.fv > m.ABSACTIVE
+                ** o_inst.v == \old(o_inst.v)
+                ** o_inst.a == \old(o_inst.a)
+                ** o_inst.fv == \old(o_inst.fv)
+                ** o_inst.fa == \old(o_inst.fa)
+                ** (\forall int z = 0 .. i; {: o_inst.lambda[z] :} == ((o_inst.fv - o_inst.v[z]) * 100) / o_inst.fv)
+                ** (\forall int z = i .. |o_inst.s|; {: o_inst.s[z] :} == \old(o_inst.s[z]))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 1 && o_inst.a[z] < m.MINUS_A)
+                                             ==> {: o_inst.p[z] :} == 0))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 1 && o_inst.a[z] < m.MINUS_A)
+                                             ==> {: o_inst.s[z] :} == 2))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 2 && o_inst.lambda[z] > m.LAMBDA_ABS)
+                                             ==> {: o_inst.p[z] :} == -1))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 2 && o_inst.lambda[z] > m.LAMBDA_ABS)
+                                             ==> {: o_inst.s[z] :} == 3))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 3 && o_inst.a[z] > m.MINUS_A)
+                                             ==> {: o_inst.p[z] :} == 0))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 3 && o_inst.a[z] > m.MINUS_A)
+                                             ==> {: o_inst.s[z] :} == 4))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 4 && o_inst.a[z] > m.PLUS_BIG_A)
+                                             ==> {: o_inst.p[z] :} == 2))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 4 && o_inst.a[z] > m.PLUS_BIG_A)
+                                             ==> {: o_inst.s[z] :} == 5))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 5 && o_inst.a[z] < m.PLUS_BIG_A)
+                                             ==> {: o_inst.p[z] :} == 0))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 5 && o_inst.a[z] < m.PLUS_BIG_A)
+                                             ==> {: o_inst.s[z] :} == 6))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 6 && o_inst.a[z] < m.PLUS_A)
+                                             ==> {: o_inst.p[z] :} == 1))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 6 && o_inst.a[z] < m.PLUS_A)
+                                             ==> {: o_inst.s[z] :} == 7))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 7 && o_inst.a[z] < m.MINUS_A)
+                                             ==> {: o_inst.p[z] :} == -1))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 7 && o_inst.a[z] < m.MINUS_A)
+                                             ==> {: o_inst.s[z] :} == 8))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 8 && o_inst.a[z] > m.MINUS_A)
+                                             ==> {: o_inst.p[z] :} == 0))
+                ** (\forall int z = 0 .. i; ((\old(o_inst.s[z]) == 8 && o_inst.a[z] > m.MINUS_A)
+                                             ==> {: o_inst.s[z] :} == 4));
+            for (int i = 0; i < 4; i = i + 1) {
+                o_inst.lambda = o_inst.lambda[i -> ((o_inst.fv - o_inst.v[i]) * 100) / o_inst.fv];
+                if (o_inst.s[i] == 1) {
+                    if (o_inst.a[i] < m.MINUS_A){
+                        o_inst.p = o_inst.p[i -> 0];
+                        o_inst.s = o_inst.s[i -> 2];
+                    }
+                }
+                else if (o_inst.s[i] == 2) {
+                    if (o_inst.lambda[i] > m.LAMBDA_ABS) {
+                        o_inst.p = o_inst.p[i -> -1];
+                        o_inst.s = o_inst.s[i -> 3];
+                    }
+                }
+                else if (o_inst.s[i] == 3) {
+                    if (o_inst.a[i] > m.MINUS_A) {
+                        o_inst.p = o_inst.p[i -> 0];
+                        o_inst.s = o_inst.s[i -> 4];
+                    }
+                }
+                else if (o_inst.s[i] == 4) {
+                    if (o_inst.a[i] > m.PLUS_BIG_A) {
+                        o_inst.p = o_inst.p[i -> 2];
+                        o_inst.s = o_inst.s[i -> 5];
+                    }
+                }
+                else if (o_inst.s[i] == 5) {
+                    if (o_inst.a[i] < m.PLUS_BIG_A) {
+                        o_inst.p = o_inst.p[i -> 0];
+                        o_inst.s = o_inst.s[i -> 6];
+                    }
+                }
+                else if (o_inst.s[i] == 6) {
+                    if (o_inst.a[i] < m.PLUS_A) {
+                        o_inst.p = o_inst.p[i -> 1];
+                        o_inst.s = o_inst.s[i -> 7];
+                    }
+                }
+                else if (o_inst.s[i] == 7) {
+                    if (o_inst.a[i] < m.MINUS_A) {
+                        o_inst.p = o_inst.p[i -> -1];
+                        o_inst.s = o_inst.s[i -> 8];
+                    }
+                }
+                else if (o_inst.s[i] == 8) {
+                    if (o_inst.a[i] > m.MINUS_A) {
+                        o_inst.p = o_inst.p[i -> 0];
+                        o_inst.s = o_inst.s[i -> 4];
+                    }
+                }
+            }
+        }
+    }
+    
+    context Perm(m, 1\2)
+        ** m != null
+        ** held(m)
+        ** m.global_permission_invariant()
+        ** m.absasr_main == this
+        ** pc == 0
+        ** m.reachable_states_absasr_main_0();
+    // The measured values are not changed by the ASR
+    ensures o_inst.v == \old(o_inst.v)
+        ** o_inst.a == \old(o_inst.a)
+        ** o_inst.fv == \old(o_inst.fv)
+        ** o_inst.fa == \old(o_inst.fa);
+    // The ABS state is not changed by the ASR
+    ensures o_inst.s == \old(o_inst.s);
+    // If there is no slippage, then the ASR should release the braking pressure
+    ensures (\forall int z = 0 .. 2; ((   o_inst.v[z] > 0
+                                       && (o_inst.v[z] - o_inst.v[|o_inst.v| - z - 1]) * 100 / o_inst.v[z] <= m.LAMBDA_ASR)
+                                      ==> {: o_inst.p[z] :} < 0));
+    // If there is slippage, but the wheel is not accelerating, braking pressure should be maintained
+    ensures (\forall int z = 0 .. 2; ((   o_inst.v[z] > 0
+                                       && (o_inst.v[z] - o_inst.v[|o_inst.v| - z - 1]) * 100 / o_inst.v[z] > m.LAMBDA_ASR
+                                       && o_inst.a[z] <= 0)
+                                      ==> {: o_inst.p[z] :} == 0));
+    // If there is slippage and the wheel continues to accelerate, braking pressure should be increased
+    ensures (\forall int z = 0 .. 2; ((   o_inst.v[z] > 0
+                                       && (o_inst.v[z] - o_inst.v[|o_inst.v| - z - 1]) * 100 / o_inst.v[z] > m.LAMBDA_ASR
+                                       && o_inst.a[z] > 0)
+                                      ==> {: o_inst.p[z] :} > 0));
+    void _ASR() {
+        int j = 3;
+        
+        loop_invariant true 
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.absasr_main == this
+            ** pc == 0
+            ** m.reachable_states_absasr_main_0()
+            ** (0 <= i && i <= 2)
+            ** (j == 3 || j == 2);
+        loop_invariant true
+            ** o_inst.v == \old(o_inst.v)
+            ** o_inst.a == \old(o_inst.a)
+            ** o_inst.fv == \old(o_inst.fv)
+            ** o_inst.fa == \old(o_inst.fa)
+            ** o_inst.s == \old(o_inst.s)
+            ** (i == 0 ==> j == 3)
+            ** (i == 1 ==> j == 2)
+            ** (\forall int z = 0 .. i; ((   o_inst.v[z] > 0
+                                          && (o_inst.v[z] - o_inst.v[|o_inst.v| - z - 1]) * 100 / o_inst.v[z] <= m.LAMBDA_ASR)
+                                         ==> {: o_inst.p[z] :} < 0))
+            ** (\forall int z = 0 .. i; ((   o_inst.v[z] > 0
+                                          && (o_inst.v[z] - o_inst.v[|o_inst.v| - z - 1]) * 100 / o_inst.v[z] > m.LAMBDA_ASR
+                                          && o_inst.a[z] <= 0)
+                                         ==> {: o_inst.p[z] :} == 0))
+            ** (\forall int z = 0 .. i; ((   o_inst.v[z] > 0
+                                          && (o_inst.v[z] - o_inst.v[|o_inst.v| - z - 1]) * 100 / o_inst.v[z] > m.LAMBDA_ASR
+                                          && o_inst.a[z] > 0)
+                                         ==> {: o_inst.p[z] :} > 0));
+        for (int i = 0; i < 2; i = i + 1) {
+            if (o_inst.v[i] > 0) {
+                o_inst.lambda = o_inst.lambda[i -> ((o_inst.v[i] - o_inst.v[j]) * 100) / o_inst.v[i]];
+                if (o_inst.lambda[i] > m.LAMBDA_ASR) {
+                    if (o_inst.a[i] > 0) {
+                        o_inst.p = o_inst.p[i -> 2];
+                    }
+                    else {
+                        o_inst.p = o_inst.p[i -> 0];
+                    }
+                }
+                else {
+                    o_inst.p = o_inst.p[i -> -1];
+                }
+            }
+            j = 2;
+        }
+    }
+}
+
+class ABSASR_read {
+    Main m;
+    int pc;
+    
+    ABSASR o_inst;
+    
+    int tmp_0;
+    int tmp_1;
+    int tmp_2;
+    int tmp_3;
+    
+    int read_0;
+    int read_1;
+    int read_2;
+    int read_3;
+    
+    ensures Perm(m, write)
+            ** m == m_param;
+    ensures Perm(pc, write)
+            ** pc == 0;
+    ensures Perm(o_inst, read)
+            ** o_inst == absasr_instance;
+    ensures Perm(tmp_0, write);
+    ensures Perm(tmp_1, write);
+    ensures Perm(tmp_2, write);
+    ensures Perm(tmp_3, write);
+    ensures Perm(read_0, write);
+    ensures Perm(read_1, write);
+    ensures Perm(read_2, write);
+    ensures Perm(read_3, write);
+    ABSASR_read(Main m_param, ABSASR absasr_instance) {
+        m = m_param;
+        pc = 0;
+        o_inst = absasr_instance;
+    }
+                   
+    context Perm(m, 1\2)
+        ** m != null
+        ** Perm(m.absasr_read, read)
+        ** m.absasr_read == this
+        ** Perm(pc, 1\2)
+        ** pc == 0;   
+    void run() {
+        lock m;
+        
+        tmp_0 = 0;
+        tmp_1 = 0;
+        tmp_2 = 0;
+        tmp_3 = 0;
+        
+        loop_invariant true
+            ** Perm(m, 1\2)
+            ** m != null
+            ** held(m)
+            ** m.global_permission_invariant()
+            ** m.absasr_read == this
+            ** Perm(pc, 1\2)
+            ** m.process_state[1] == -1
+            ** pc == 0
+            ** m.reachable_states_absasr_read_0(); 
+        while (true) {
+            boolean initial_traverse = true;
+        
+            // READ VR
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.absasr_read == this
+                ** Perm(pc, 1\2)
+                ** m.process_state[1] == -1
+                ** (initial_traverse ==> (pc == 0 ** m.reachable_states_absasr_read_0()))
+                ** (!initial_traverse ==> (pc == 1 ** m.reachable_states_absasr_read_1())); 
+            while (|o_inst.bus_vr.buffer| <= 0) {
+                initial_traverse = false;
+                
+                m.process_state = m.process_state[1 -> 6];
+                
+                pc = 1;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.absasr_read == this
+                    ** Perm(pc, 1\2)
+                    ** pc == 1
+                    ** m.reachable_states_absasr_read_1()
+                    ** (!initial_traverse);
+                while (m.process_state[1] != -1 || m.event_state[6] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            pc = 2;
+            
+            read_0 = o_inst.bus_vr.fifo_read();
+            assert read_0 == m.tickcounter_0.speed;
+            assert m.event_state[13] > 0;               // Prove timing
+            m.event_state = m.event_state[13 -> -3];
+            
+            o_inst.v = o_inst.v[0 -> read_0];
+            o_inst.a = o_inst.a[0 -> (o_inst.v[0] - tmp_0)];
+            tmp_0 = o_inst.v[0];
+            
+            initial_traverse = true;
+        
+            // READ VL
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.absasr_read == this
+                ** Perm(pc, 1\2)
+                ** m.process_state[1] == -1
+                ** (initial_traverse ==> (pc == 2 ** m.reachable_states_absasr_read_2()))
+                ** (!initial_traverse ==> (pc == 3 ** m.reachable_states_absasr_read_3())); 
+            while (|o_inst.bus_vl.buffer| <= 0) {
+                initial_traverse = false;
+                
+                m.process_state = m.process_state[1 -> 8];
+                
+                pc = 3;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.absasr_read == this
+                    ** Perm(pc, 1\2)
+                    ** pc == 3
+                    ** m.reachable_states_absasr_read_3()
+                    ** (!initial_traverse); 
+                while (m.process_state[1] != -1 || m.event_state[8] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            pc = 4;
+            
+            read_1 = o_inst.bus_vl.fifo_read();
+            assert read_1 == m.tickcounter_1.speed;
+            assert m.event_state[14] > 0;               // Prove timing
+            m.event_state = m.event_state[14 -> -3];
+            
+            o_inst.v = o_inst.v[1 -> read_1];
+            o_inst.a = o_inst.a[1 -> (o_inst.v[1] - tmp_1)];
+            tmp_1 = o_inst.v[1];
+            
+            initial_traverse = true;
+        
+            // READ HR
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.absasr_read == this
+                ** Perm(pc, 1\2)
+                ** m.process_state[1] == -1
+                ** (initial_traverse ==> (pc == 4 ** m.reachable_states_absasr_read_4()))
+                ** (!initial_traverse ==> (pc == 5 ** m.reachable_states_absasr_read_5()));
+            while (|o_inst.bus_hr.buffer| <= 0) {
+                initial_traverse = false;
+                
+                m.process_state = m.process_state[1 -> 10];
+                
+                pc = 5;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.absasr_read == this
+                    ** Perm(pc, 1\2)
+                    ** pc == 5
+                    ** m.reachable_states_absasr_read_5()
+                    ** (!initial_traverse); 
+                while (m.process_state[1] != -1 || m.event_state[10] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            pc = 6;
+            
+            read_2 = o_inst.bus_hr.fifo_read();
+            assert read_2 == m.tickcounter_2.speed;
+            assert m.event_state[15] > 0;               // Prove timing
+            m.event_state = m.event_state[15 -> -3];
+
+            o_inst.v = o_inst.v[2 -> read_2];
+            o_inst.a = o_inst.a[2 -> (o_inst.v[2] - tmp_2)];
+            tmp_2 = o_inst.v[2];
+        
+            // READ HL
+            loop_invariant true
+                ** Perm(m, 1\2)
+                ** m != null
+                ** held(m)
+                ** m.global_permission_invariant()
+                ** m.absasr_read == this
+                ** Perm(pc, 1\2)
+                ** m.process_state[1] == -1
+                ** (initial_traverse ==> (pc == 6 ** m.reachable_states_absasr_read_6()))
+                ** (!initial_traverse ==> (pc == 7 ** m.reachable_states_absasr_read_7())); 
+            while (|o_inst.bus_hl.buffer| <= 0) {
+                initial_traverse = false;
+                
+                m.process_state = m.process_state[1 -> 12];
+                
+                pc = 7;
+                
+                loop_invariant true
+                    ** Perm(m, 1\2)
+                    ** m != null
+                    ** held(m)
+                    ** m.global_permission_invariant()
+                    ** m.absasr_read == this
+                    ** Perm(pc, 1\2)
+                    ** pc == 7
+                    ** m.reachable_states_absasr_read_7()
+                    ** (!initial_traverse); 
+                while (m.process_state[1] != -1 || m.event_state[12] != -2) {
+                    unlock m;
+                    lock m;
+                }
+            }
+            
+            pc = 0;
+            
+            read_3 = o_inst.bus_hl.fifo_read();
+            assert read_3 == m.tickcounter_3.speed;
+            assert m.event_state[16] > 0;               // Prove timing
+            m.event_state = m.event_state[16 -> -3];
+            
+            o_inst.v = o_inst.v[3 -> read_3];
+            o_inst.a = o_inst.a[3 -> (o_inst.v[3] - tmp_3)];
+            tmp_3 = o_inst.v[3];
+        }
+        unlock m;
+    }
+}

@@ -1,0 +1,13 @@
+These steps have been tested on Ubuntu 22.04.1. Similar steps should work for Mac and Windows, as well as other Linux distributions. JAR files for the tool are included (`sc2ast.jar`, `sc2pvl.jar`), so there is no need to compile anything.
+
+# REQUIREMENTS:
+ - build-essential for make.
+ - Java 16 or higher.
+ - VerCors 1.4.0 to verify (https://github.com/utwente-fmt/vercors/releases/tag/v1.4.0).
+
+# HOW TO RUN:
+1. Adapt the path to Java for your current installation in the Makefile at the root folder (if Java is in your path, it should work without changes). Do not change the Makefiles that come with the examples.
+2. Run "make all" to compile the robot, FIFO and ABS examples. The files will be deposited in the respective ./results/... folders.
+3. Navigate to the example you are interested in and run "vct --silicon *.pvl" in the respective folder. Keep in mind that some necessary annotations, such as loop bounds, are not yet generated automatically and may cause the verification to fail. See the manually adjusted translations in this repository as examples of how to add such annotations, or consult the VerCors Tutorial (https://vercors.ewi.utwente.nl/pub/wiki/).
+4. Run "make clean" to delete all generated files and folders.
+
