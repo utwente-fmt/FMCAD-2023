@@ -1,6 +1,6 @@
 # FMCAD 2023
 
-Case studies and tools to support the submission of our paper "Deductive Verification of Embedded Systems using a Formal Encoding of SystemC" to FMCAD 2023.
+Case studies and tools to support the submission of our paper "Deductive Verification of Parameterized Embedded Systems modeled in SystemC" to FMCAD 2023.
 
 ## Case studies
 
