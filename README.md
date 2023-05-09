@@ -4,20 +4,18 @@ Case studies and tools to support the submission of our paper "Deductive Verific
 
 ## Case studies
 
-In the **examples** folder you can find the various versions of the robot case study and the producer consumer case study mentioned in the Evaluation section (Sec. 5) of our paper. Each subfolder contains both the original SystemC design (which you can compile and simulate with SystemC) and a pvl file with our transformation. The pvl files also contain the RASI invariant and are anotated with program counters. The robot and robot-1MS examples are also anotated with a property to verify. You can verify any of this files with VerCors by calling
+In the **examples** folder you can find the various versions of the robot case study and the producer consumer case study mentioned in the Evaluation section (Sec. 5) of our paper. Each subfolder contains both the original SystemC design (which you can compile and simulate with SystemC) and a pvl file with our transformation. The pvl files also contain the RASI invariant and are annotated with program counters. The robot and robot-1MS examples are also annotated with a property to verify. You can verify any of this files with VerCors by calling
 > `vct --silicon <file_name>.pvl`
 
 For your convenience, we list here the experimental results also found in Sec. 5 of our paper
 
-| Design | # processes | # manual invariants | RASI size | Verification time | Result |
+| Design | #processes | #properties | # manual invariants | RASI size | Verification time (seconds) |
 |--------|-------------|---------------------|-----------|-------------------|--------|
-|robot|2|2|8|13s|&check;|
-|robot-1MS|2|4|12|15s|&check;|
-|robot-bad-timing|2|4|26|25s|&cross;|
-|robot-dummy|3|4|24|34s|&check;|
-|robot-bad-proc|3|4|24|33s|&cross;|
-|producer-consumer|2|8|72|52s|&check;|
-|ABS/ASR|6|9|247|10610s|&check;|
+|robot|2|1|2|8|13|
+|robot-1MS|2|1|4|12|15|
+|robot-dummy|3|1|4|24|34|
+|producer-consumer|2|2|8|72|52|
+|ABS/ASR|6|9|9|247|10400|
 
 
 ## Automatic transformation
@@ -32,7 +30,7 @@ The **RASI** folder contains scripts for generating the RASI for each of the cas
 For the simulation tool, you need Python3. To generate the RASI for one of the _robot_ case studies, you can call
 > ```python3 simulate.py name```
 
-where ```name``` is one of `robot`, `robot-dummy`, `robot-bad`, `robot-1MS`, `robot-6MS`, `cons-prod`, `abs-asr`. The RASI will be printed to the standard output, along with the count of abstract states found. The result is an underapproximation of the reachable abstract state space. If any state is missing, VerCors will report that the invariants does not hold. You can then try to run the script again, and allow the randomness to find more states. You can also try to increase the amount of simulation runs `SIM_COUNT` or simulation length `SIM_LENGTH` in the `simulator/main.py` file.
+where ```name``` is one of `robot`, `robot-dummy`, `robot-1MS`, `cons-prod`, `abs-asr`. The RASI will be printed to the standard output, along with the count of abstract states found. The result is an underapproximation of the reachable abstract state space. If any state is missing, VerCors will report that the invariants does not hold. You can then try to run the script again, and allow the randomness to find more states. You can also try to increase the amount of simulation runs `SIM_COUNT` or simulation length `SIM_LENGTH` in the `simulator/main.py` file.
 
 ### Using the exhaustive exploration tool
 To use the exploration tool, navigate to the `exploration` folder, adjust the `main.py` and `simulator.py` files and then execute `main.py`. You need at least Python 3.7 to run the program. This will generate a full RASI including program counters and the length of the invariant.
