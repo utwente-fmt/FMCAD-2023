@@ -231,9 +231,9 @@ class Main ():
             
         for p in self.processes:
             print(f"// Process with pid {p} is called {self.processes[p].name}")
-        mssg = f"// Found a total of {len(self.state)} states ({self.count_states_no_tag()} real states)."
+        mssg = f"// Found a total of {len(self.state)} states ({self.count_states_no_tag()} scheduling states)."
         print(mssg)
-        print(mssg, file=sys.stderr)
+        # print(mssg, file=sys.stderr)
     
     def get_all_invariants(
         self, 
