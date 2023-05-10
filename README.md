@@ -4,7 +4,7 @@ Case studies and tools to support the submission of our paper "Deductive Verific
 
 ## Case studies
 
-In the **examples** folder you can find the various versions of the robot case study and the producer consumer case study mentioned in the Evaluation section (Sec. 5) of our paper. Each subfolder contains both the original SystemC design (which you can compile and simulate with SystemC) and a pvl file with our transformation. The pvl files also contain the RASI invariant and are annotated with program counters. The robot and robot-1MS examples are also annotated with a property to verify. You can verify any of this examples with VerCors by calling
+In the **examples** folder you can find the various versions of the robot case study and the producer consumer case study mentioned in the Evaluation section (Sec. 5) of our paper. Each subfolder contains both the original SystemC design (which you can compile and simulate with SystemC) and a pvl file with our transformation. The pvl files also contain the RASI invariant and are annotated with program counters. The robot and robot-1MS examples are also annotated with a property to verify. You can verify any of these examples with VerCors by calling
 > ```vct --silicon file1.pvl file2.pvl ... fileN.pvl```
 
 For most of the examples, there is a single pvl file. For the ABSASR example, make sure you list all pvl files in its folder as inputs to VerCors. Instructions for downloading VerCors can be found at the end of this README.

@@ -1,6 +1,6 @@
 # RASI generation via simulation
 
-Models to generate the RASI for the robot variants, the producer consumer design, and the abs/asr design can be found in the examples folder. Also, for each example, you can find in the corresponding folder the pvl code that follows the SystemC to PVL transformation described in the paper. This pvl files have been extended with the RASI, program counters, and properties to verify. To re-generate the RASI you can call the following command from your terminal
+Models to generate the RASI for the robot variants, the producer consumer design, and the abs/asr design can be found in the examples folder. Also, for each example, you can find in the corresponding folder the pvl code that follows the SystemC to PVL transformation described in the paper. These pvl files have been extended with the RASI, program counters, and properties to verify. To re-generate the RASI you can call the following command from your terminal
 
 > `python3 simulate.py <example>`
     
