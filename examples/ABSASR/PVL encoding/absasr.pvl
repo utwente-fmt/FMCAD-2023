@@ -645,6 +645,8 @@ class ABSASR_read {
             o_inst.v = o_inst.v[2 -> read_2];
             o_inst.a = o_inst.a[2 -> (o_inst.v[2] - tmp_2)];
             tmp_2 = o_inst.v[2];
+
+            initial_traverse = true;
         
             // READ HL
             loop_invariant true
